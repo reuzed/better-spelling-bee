@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import "./index.css";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import type { GameState, Puzzle, StatsSummary } from "./types";
-import { loadDictionaryFromFile, normalizeWordList } from "./lib/dictionary";
 import {
   buildPuzzleFromPangram,
   computeStats,
@@ -29,20 +28,22 @@ function App() {
   const [message, setMessage] = useState<string>("");
 
   useEffect(() => {
-    // Auto-load bundled words.txt if present
     (async () => {
       try {
-        if (!dictionary && wordsUrl) {
-          const res = await fetch(wordsUrl as string);
-          if (res.ok) {
-            const text = await res.text();
-            const dict = normalizeWordList(text);
-            setDictionary(dict);
-            setMessage(`Loaded ${dict.length} words`);
-          }
+        const res = await fetch(wordsUrl as string);
+        if (res.ok) {
+          const text = await res.text();
+          const words = text
+            .split(/\r?\n/)
+            .map((w) => w.trim().toLowerCase())
+            .filter((w) => /^[a-z]+$/.test(w) && w.length >= 3);
+          setDictionary(words);
+          setMessage(`Loaded ${words.length} words (local data/words.txt)`);
+        } else {
+          setMessage("Failed to load local data/words.txt");
         }
-      } catch {
-        // ignore if not available
+      } catch (e) {
+        setMessage("Failed to load local data/words.txt");
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -158,7 +159,9 @@ function App() {
       tabIndex={0}
     >
       <header className="p-4 border-b border-neutral-200 flex flex-wrap gap-3 items-center justify-between">
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Better Spelling Bee</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+          Better Spelling Bee
+        </h1>
         <div className="flex items-center gap-2">
           <button
             className="px-4 py-2 rounded bg-neutral-200 hover:bg-neutral-300"
@@ -172,7 +175,9 @@ function App() {
             onSubmit={(e) => {
               e.preventDefault();
               const form = e.currentTarget as HTMLFormElement;
-              const input = form.elements.namedItem("seed") as HTMLInputElement | null;
+              const input = form.elements.namedItem(
+                "seed"
+              ) as HTMLInputElement | null;
               const seed = input?.value?.trim().toLowerCase() || "";
               if (!dictionary || seed.length < 7) return;
               const p = buildPuzzleFromPangram(dictionary, seed);
@@ -200,7 +205,9 @@ function App() {
       <main className="flex-1 p-6 grid gap-8 md:grid-cols-[1fr_1.2fr]">
         <section className="grid gap-6 content-start">
           {!puzzle ? (
-            <div className="text-neutral-600">Click Randomize or provide a custom seed.</div>
+            <div className="text-neutral-600">
+              Click Randomize or provide a custom seed.
+            </div>
           ) : (
             <>
               <div className="flex items-center justify-center">
@@ -215,7 +222,8 @@ function App() {
                   {game.currentGuess || " "}
                 </div>
                 <div className="text-base md:text-lg text-neutral-600">
-                  Score: {totalScore} / Words: {game.foundWords.length} / Total: {puzzle.allowedWords.length}
+                  Score: {totalScore} / Words: {game.foundWords.length} / Total:{" "}
+                  {puzzle.allowedWords.length}
                 </div>
               </div>
               <Controls
