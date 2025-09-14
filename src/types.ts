@@ -15,4 +15,6 @@ export interface GameState {
 export interface StatsSummary {
   byLengthAndFirst: Record<string, { total: number; found: number }>;
   byFirstTwo: Record<string, { total: number; found: number }>;
+  byLengthAndFirstTwo?: Record<string, { total: number; found: number }>;
+  byLengthAndFirstThree?: Record<string, { total: number; found: number }>;
 }

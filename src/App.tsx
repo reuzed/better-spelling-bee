@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import "./index.css";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import type { GameState, Puzzle, StatsSummary } from "./types";
-import { loadDictionaryFromFile } from "./lib/dictionary";
+import { loadDictionaryFromFile, normalizeWordList } from "./lib/dictionary";
 import {
   buildPuzzleFromPangram,
   computeStats,
@@ -14,6 +14,7 @@ import { HexGrid } from "./components/HexGrid";
 import { Controls } from "./components/Controls";
 import { FoundList } from "./components/FoundList";
 import { StatsPanel } from "./components/StatsPanel";
+import wordsUrl from "./data/words.txt?url";
 
 function App() {
   const [dictionary, setDictionary] = useState<string[] | null>(null);
@@ -26,6 +27,26 @@ function App() {
     currentGuess: "",
   });
   const [message, setMessage] = useState<string>("");
+
+  useEffect(() => {
+    // Auto-load bundled words.txt if present
+    (async () => {
+      try {
+        if (!dictionary && wordsUrl) {
+          const res = await fetch(wordsUrl as string);
+          if (res.ok) {
+            const text = await res.text();
+            const dict = normalizeWordList(text);
+            setDictionary(dict);
+            setMessage(`Loaded ${dict.length} words`);
+          }
+        }
+      } catch {
+        // ignore if not available
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const stats: StatsSummary | null = useMemo(() => {
     if (!puzzle) return null;
@@ -46,16 +67,9 @@ function App() {
     );
   }, [game.foundWords, puzzle]);
 
-  function onUploadDictionary(file: File) {
-    loadDictionaryFromFile(file).then((dict) => {
-      setDictionary(dict);
-      setMessage(`Loaded ${dict.length} words`);
-    });
-  }
-
   function onGeneratePuzzle() {
     if (!dictionary) {
-      setMessage("Load a dictionary first");
+      setMessage("Dictionary not loaded yet");
       return;
     }
     const pangram = findRandomPangram(dictionary);
@@ -143,32 +157,50 @@ function App() {
       onKeyDown={onKeyDown}
       tabIndex={0}
     >
-      <header className="p-4 border-b border-neutral-200 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Better Spelling Bee</h1>
+      <header className="p-4 border-b border-neutral-200 flex flex-wrap gap-3 items-center justify-between">
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Better Spelling Bee</h1>
         <div className="flex items-center gap-2">
-          <input
-            type="file"
-            accept=".txt"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onUploadDictionary(f);
-            }}
-          />
           <button
-            className="px-3 py-2 rounded bg-neutral-200 hover:bg-neutral-300"
+            className="px-4 py-2 rounded bg-neutral-200 hover:bg-neutral-300"
             onClick={onGeneratePuzzle}
+            title="Randomize puzzle"
           >
-            Generate
+            Randomize
           </button>
+          <form
+            className="flex items-center gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const form = e.currentTarget as HTMLFormElement;
+              const input = form.elements.namedItem("seed") as HTMLInputElement | null;
+              const seed = input?.value?.trim().toLowerCase() || "";
+              if (!dictionary || seed.length < 7) return;
+              const p = buildPuzzleFromPangram(dictionary, seed);
+              if (p) {
+                setPuzzle(p);
+                setGame({ foundWords: [], currentGuess: "" });
+                setMessage(`Custom puzzle from: ${seed}`);
+              } else {
+                setMessage("Seed must have exactly 7 unique letters");
+              }
+            }}
+          >
+            <input
+              name="seed"
+              placeholder="custom 7-unique-letter word"
+              className="px-3 py-2 rounded border border-neutral-300 w-64"
+            />
+            <button className="px-4 py-2 rounded bg-amber-300 hover:bg-amber-400 text-neutral-900 font-semibold">
+              Start
+            </button>
+          </form>
         </div>
       </header>
 
-      <main className="flex-1 p-4 grid gap-6 md:grid-cols-[1fr_1.2fr]">
-        <section className="grid gap-4 content-start">
+      <main className="flex-1 p-6 grid gap-8 md:grid-cols-[1fr_1.2fr]">
+        <section className="grid gap-6 content-start">
           {!puzzle ? (
-            <div className="text-neutral-600">
-              Load a dictionary .txt and click Generate.
-            </div>
+            <div className="text-neutral-600">Click Randomize or provide a custom seed.</div>
           ) : (
             <>
               <div className="flex items-center justify-center">
@@ -179,12 +211,11 @@ function App() {
                 />
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold tracking-wide uppercase font-mono">
+                <div className="text-5xl md:text-6xl font-extrabold tracking-wide uppercase font-mono">
                   {game.currentGuess || " "}
                 </div>
-                <div className="text-sm text-neutral-500">
-                  Score: {totalScore} / Words: {game.foundWords.length} / Total:{" "}
-                  {puzzle.allowedWords.length}
+                <div className="text-base md:text-lg text-neutral-600">
+                  Score: {totalScore} / Words: {game.foundWords.length} / Total: {puzzle.allowedWords.length}
                 </div>
               </div>
               <Controls
@@ -204,8 +235,7 @@ function App() {
       </main>
 
       <footer className="p-4 text-center text-xs text-neutral-500 border-t border-neutral-200">
-        Upload any English word list. Puzzle requires a seed word with exactly
-        seven unique letters.
+        Custom seed requires a word with exactly seven unique letters.
       </footer>
     </div>
   );

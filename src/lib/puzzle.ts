@@ -57,21 +57,45 @@ export function computeStats(
   const foundSet = new Set(foundWords);
   const byLengthAndFirst: StatsSummary["byLengthAndFirst"] = {};
   const byFirstTwo: StatsSummary["byFirstTwo"] = {};
+  const byLengthAndFirstTwo: NonNullable<StatsSummary["byLengthAndFirstTwo"]> =
+    {};
+  const byLengthAndFirstThree: NonNullable<
+    StatsSummary["byLengthAndFirstThree"]
+  > = {};
 
   for (const w of puzzleWords) {
     const key1 = `${w.length}-${w[0]}`;
     const key2 = w.length >= 2 ? w.slice(0, 2) : `${w[0]}_`;
+    const key3 = `${w.length}-${key2}`;
+    const prefix3 =
+      w.length >= 3
+        ? w.slice(0, 3)
+        : `${w}${"_".repeat(Math.max(0, 3 - w.length))}`;
+    const key4 = `${w.length}-${prefix3}`;
     const isFound = foundSet.has(w);
     if (!byLengthAndFirst[key1])
       byLengthAndFirst[key1] = { total: 0, found: 0 };
     if (!byFirstTwo[key2]) byFirstTwo[key2] = { total: 0, found: 0 };
+    if (!byLengthAndFirstTwo[key3])
+      byLengthAndFirstTwo[key3] = { total: 0, found: 0 };
+    if (!byLengthAndFirstThree[key4])
+      byLengthAndFirstThree[key4] = { total: 0, found: 0 };
     byLengthAndFirst[key1].total += 1;
     byFirstTwo[key2].total += 1;
+    byLengthAndFirstTwo[key3].total += 1;
+    byLengthAndFirstThree[key4].total += 1;
     if (isFound) {
       byLengthAndFirst[key1].found += 1;
       byFirstTwo[key2].found += 1;
+      byLengthAndFirstTwo[key3].found += 1;
+      byLengthAndFirstThree[key4].found += 1;
     }
   }
 
-  return { byLengthAndFirst, byFirstTwo };
+  return {
+    byLengthAndFirst,
+    byFirstTwo,
+    byLengthAndFirstTwo,
+    byLengthAndFirstThree,
+  };
 }
