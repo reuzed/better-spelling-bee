@@ -17,4 +17,6 @@ export interface StatsSummary {
   byFirstTwo: Record<string, { total: number; found: number }>;
   byLengthAndFirstTwo?: Record<string, { total: number; found: number }>;
   byLengthAndFirstThree?: Record<string, { total: number; found: number }>;
+  byFirstAndSecond: Record<string, { total: number; found: number }>;
+  bySecondLastAndLast: Record<string, { total: number; found: number }>;
 }

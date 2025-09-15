@@ -158,7 +158,7 @@ function App() {
       onKeyDown={onKeyDown}
       tabIndex={0}
     >
-      <header className="p-4 border-b border-neutral-200 flex flex-wrap gap-3 items-center justify-between">
+      <header className="p-4 border-b border-neutral-200 flex flex-wrap gap-3 items-center justify-between max-w-6xl mx-auto w-full">
         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
           Better Spelling Bee
         </h1>
@@ -202,7 +202,7 @@ function App() {
         </div>
       </header>
 
-      <main className="flex-1 p-6 grid gap-8 md:grid-cols-[1fr_1.2fr]">
+      <main className="flex-1 p-6 grid gap-8 md:grid-cols-2 max-w-6xl mx-auto w-full">
         <section className="grid gap-6 content-start">
           {!puzzle ? (
             <div className="text-neutral-600">
@@ -236,13 +236,13 @@ function App() {
             </>
           )}
         </section>
-        <aside className="grid gap-4 content-start">
+        <aside className="grid gap-4 content-start min-w-0">
           <div className="text-sm text-neutral-600">{message}</div>
           <StatsPanel stats={stats} />
         </aside>
       </main>
 
-      <footer className="p-4 text-center text-xs text-neutral-500 border-t border-neutral-200">
+      <footer className="p-4 text-center text-xs text-neutral-500 border-t border-neutral-200 max-w-6xl mx-auto w-full">
         Custom seed requires a word with exactly seven unique letters.
       </footer>
     </div>

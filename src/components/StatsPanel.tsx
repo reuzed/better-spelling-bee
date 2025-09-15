@@ -31,7 +31,7 @@ export function StatsPanel({ stats }: StatsPanelProps) {
         <summary className="cursor-pointer select-none px-3 py-2 font-semibold">
           Length × First Letter
         </summary>
-        <div className="p-2 overflow-auto">
+        <div className="p-2 overflow-x-auto">
           <table className="text-[11px] md:text-xs border border-neutral-200">
             <thead className="bg-neutral-50">
               <tr>
@@ -84,7 +84,7 @@ export function StatsPanel({ stats }: StatsPanelProps) {
         <summary className="cursor-pointer select-none px-3 py-2 font-semibold">
           Length × First Two Letters
         </summary>
-        <div className="p-2 overflow-auto">
+        <div className="p-2 overflow-x-auto">
           {(() => {
             const lenSet = new Set<number>();
             const prefixSet = new Set<string>();
@@ -170,7 +170,7 @@ export function StatsPanel({ stats }: StatsPanelProps) {
         <summary className="cursor-pointer select-none px-3 py-2 font-semibold">
           Length × First Three Letters
         </summary>
-        <div className="p-2 overflow-auto">
+        <div className="p-2 overflow-x-auto">
           {(() => {
             const lenSet = new Set<number>();
             const prefixSet = new Set<string>();
@@ -210,6 +210,154 @@ export function StatsPanel({ stats }: StatsPanelProps) {
                       </th>
                       {prefixes.map((p) => {
                         const k = `${len}-${p}`;
+                        const cell = map[k];
+                        const total = cell?.total ?? 0;
+                        const found = cell?.found ?? 0;
+                        const remaining = Math.max(0, total - found);
+                        return (
+                          <td
+                            key={k}
+                            title={`${found} / ${total}`}
+                            className={`px-2 py-1 border-r border-b text-center font-mono ${
+                              remaining === 0
+                                ? "bg-green-100 text-green-900"
+                                : total === 0
+                                ? "text-neutral-300"
+                                : ""
+                            }`}
+                          >
+                            {total === 0 ? "" : remaining}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            );
+          })()}
+        </div>
+      </details>
+
+      <details className="rounded border border-neutral-200" open={false}>
+        <summary className="cursor-pointer select-none px-3 py-2 font-semibold">
+          First Letter × Second Letter
+        </summary>
+        <div className="p-2 overflow-x-auto">
+          {(() => {
+            const firstSet = new Set<string>();
+            const secondSet = new Set<string>();
+            const map = stats.byFirstAndSecond || {};
+            for (const key of Object.keys(map)) {
+              const [f, s] = key.split("-");
+              if (f) firstSet.add(f);
+              if (s) secondSet.add(s);
+            }
+            const firsts = Array.from(firstSet).sort((a, b) =>
+              a.localeCompare(b)
+            );
+            const seconds = Array.from(secondSet).sort((a, b) =>
+              a.localeCompare(b)
+            );
+            return (
+              <table className="text-[11px] md:text-xs border border-neutral-200">
+                <thead className="bg-neutral-50">
+                  <tr>
+                    <th className="px-2 py-1 border-b border-r text-left">
+                      first \\ second
+                    </th>
+                    {seconds.map((s) => (
+                      <th
+                        key={s}
+                        className="px-2 py-1 border-b border-r font-mono"
+                      >
+                        {s}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {firsts.map((f) => (
+                    <tr key={f} className="odd:bg-white even:bg-neutral-50">
+                      <th className="px-2 py-1 border-r border-b text-right font-semibold">
+                        {f}
+                      </th>
+                      {seconds.map((s) => {
+                        const k = `${f}-${s}`;
+                        const cell = map[k];
+                        const total = cell?.total ?? 0;
+                        const found = cell?.found ?? 0;
+                        const remaining = Math.max(0, total - found);
+                        return (
+                          <td
+                            key={k}
+                            title={`${found} / ${total}`}
+                            className={`px-2 py-1 border-r border-b text-center font-mono ${
+                              remaining === 0
+                                ? "bg-green-100 text-green-900"
+                                : total === 0
+                                ? "text-neutral-300"
+                                : ""
+                            }`}
+                          >
+                            {total === 0 ? "" : remaining}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            );
+          })()}
+        </div>
+      </details>
+
+      <details className="rounded border border-neutral-200" open={false}>
+        <summary className="cursor-pointer select-none px-3 py-2 font-semibold">
+          Second-last Letter × Last Letter
+        </summary>
+        <div className="p-2 overflow-x-auto">
+          {(() => {
+            const beforeSet = new Set<string>();
+            const lastSet = new Set<string>();
+            const map = stats.bySecondLastAndLast || {};
+            for (const key of Object.keys(map)) {
+              const [b, l] = key.split("-");
+              if (b) beforeSet.add(b);
+              if (l) lastSet.add(l);
+            }
+            const befores = Array.from(beforeSet).sort((a, b) =>
+              a.localeCompare(b)
+            );
+            const lasts = Array.from(lastSet).sort((a, b) =>
+              a.localeCompare(b)
+            );
+            return (
+              <table className="text-[11px] md:text-xs border border-neutral-200">
+                <thead className="bg-neutral-50">
+                  <tr>
+                    <th className="px-2 py-1 border-b border-r text-left">
+                      prev \\ last
+                    </th>
+                    {lasts.map((l) => (
+                      <th
+                        key={l}
+                        className="px-2 py-1 border-b border-r font-mono"
+                      >
+                        {l}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {befores.map((b) => (
+                    <tr key={b} className="odd:bg-white even:bg-neutral-50">
+                      <th className="px-2 py-1 border-r border-b text-right font-semibold">
+                        {b}
+                      </th>
+                      {lasts.map((l) => {
+                        const k = `${b}-${l}`;
                         const cell = map[k];
                         const total = cell?.total ?? 0;
                         const found = cell?.found ?? 0;
